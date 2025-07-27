@@ -3,7 +3,7 @@
 This project is a fully functional **messaging application** backend built using **Django** and **Django REST Framework (DRF)**. It demonstrates the complete lifecycle of building scalable, secure, and RESTful APIs including model design, serialization, viewsets, and nested routing using best practices.
 
 > ✅ Project for: **ALX Backend Specialization**  
-> ✅ Author: *Blessing Ebele Anochili*  
+> ✅ Author: *RUberanziza Janvier*  
 > ✅ Directory: `messaging_app/`
 
 ---
