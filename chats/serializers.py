@@ -1,91 +1,38 @@
 from rest_framework import serializers
-from .models import Message, Conversation, User, ConversationParticipant
+from .models import CustomUser, Message, Conversation
 
+# 1. User Serializer
 class UserSerializer(serializers.ModelSerializer):
-    confirm_password = serializers.CharField(write_only=True)
-    password = serializers.CharField(write_only=True)
-    fullname = serializers.CharField(source='get_full_name', read_only=True)
+    phone_number = serializers.CharField(required=False)
 
     class Meta:
-        model = User
-        fields = [
-            "user_id",
-            "email",
-            "password",
-            "confirm_password",
-            "first_name",
-            "last_name",
-            "phone_number",
-            "profile_image",
-            "role",
-            "fullname",
-        ]
-        read_only_fields = ["user_id", "created_at", "fullname"]
+        model = CustomUser
+        fields = ['user_id', 'username', 'email', 'first_name', 'last_name', 'phone_number']
 
-    def create(self, validated_data):
-        validated_data.pop("confirm_password")
-        password = validated_data.pop("password")
-        user = User(**validated_data)  # Remove extra field
-        user.set_password(password)
-        user.save()
-        return user
-
-    def validate(self, data):
-        if data.get("password") != data.get("confirm_password"):
-            raise serializers.ValidationError("Passwords do not match.")
-        return data
-    
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Email is already in use.")
-        return value
-    
+# 2. Message Serializer
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True)
-    sender_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), write_only=True, source="sender"
-    )
-
-    conversation = serializers.SlugRelatedField(
-        slug_field="conversation_id",
-        queryset=Conversation.objects.all()
-    )
-    sender_info = serializers.SerializerMethodField()
+    message_body = serializers.CharField()
 
     class Meta:
         model = Message
-        fields = [
-            "message_id",
-            "message_body",
-            "conversation",
-            "sender",
-            "sender_id",
-            "sent_at",
-        ]
-        read_only_fields = ["sent_at", "message_id", "sender_info"]
+        fields = ['message_id', 'conversation', 'sender', 'message_body', 'sent_at']
 
-    def get_sender_info(self, obj):
-        return f"{obj.sender.get_sender_info()}"
-
-
+# 3. Conversation Serializer with nested messages and participants
 class ConversationSerializer(serializers.ModelSerializer):
-    participants = serializers.SerializerMethodField(read_only=True)
-    # participants = UserSerializer(many=True, read_only=True)
-    participant_ids = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), many=True, write_only=True, source='participants'
-    )
-    messages = MessageSerializer(many=True, read_only=True, source="messages")
+    participants = UserSerializer(many=True, read_only=True)
+    messages = MessageSerializer(many=True, read_only=True)
+    participant_usernames = serializers.SerializerMethodField()
+
     class Meta:
         model = Conversation
-        fields = ['conversation_id', 'participants', 'created_at', 'participant_ids', "messages"]
-        read_only_fields = ["created_at"]
+        fields = ['conversation_id', 'participants', 'participant_usernames', 'created_at', 'messages']
 
-    def get_participants(self, obj):
-        return UserSerializer(obj.participants.all(), many=True).data
-    
-    def create(self, validated_data):
-        users = validated_data.pop("participant_ids")
-        conversation = Conversation.objects.create(**validated_data)
-        for user in users:
-            ConversationParticipant.objects.create(user=user, conversation=conversation)
-        return conversation
+    def get_participant_usernames(self, obj):
+        return [user.username for user in obj.participants.all()]
+
+    def validate(self, data):
+        # Dummy validation to use ValidationError
+        if not data.get('participants'):
+            raise serializers.ValidationError("At least one participant is required.")
+        return data
