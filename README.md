@@ -1,141 +1,229 @@
-# 📬 Messaging API with Django & DRF
+# Messaging API
 
-This project is a fully functional **messaging application** backend built using **Django** and **Django REST Framework (DRF)**. It demonstrates the complete lifecycle of building scalable, secure, and RESTful APIs including model design, serialization, viewsets, and nested routing using best practices.
-
-> ✅ Project for: **ALX Backend Specialization**  
-> ✅ Author: *RUberanziza Janvier*  
-> ✅ Directory: `messaging_app/`
+A robust and scalable RESTful API built with Django and Django REST Framework for managing user messaging conversations and messages. This project demonstrates best practices in API development including model design, serializers, viewsets, and clean URL routing.
 
 ---
 
-## 📌 Features
+## Overview
 
-- ✅ Custom user model with UUIDs and extended fields (phone number, etc.)
-- ✅ One-to-many and many-to-many relationships (e.g., conversations ↔ participants, messages ↔ conversations)
-- ✅ Nested routing for RESTful endpoints using `drf-nested-routers`
-- ✅ DRF viewsets for clean, reusable code
-- ✅ API browsable interface & testable via Postman
-- ✅ Modular project/app structure
+This project implements a messaging system backend API that allows users to create conversations, send messages, and manage user roles and profiles. It follows Django's best practices for project structure and RESTful API design.
 
 ---
 
-## 🧱 Project Structure
+## Features
 
-messaging_app/
-│
-├── chats/ # Messaging logic
-│ ├── models.py # Models for User, Conversation, Message
-│ ├── serializers.py # Serializers with nested relationships
-│ ├── views.py # DRF ViewSets
-│ ├── urls.py # API routes using DRF Nested Routers
-│
-├── messaging_app/ # Django project core
-│ ├── settings.py
-│ ├── urls.py # Project-level routing
-│
-├── db.sqlite3 # SQLite database
-├── manage.py
-└── README.md
-
-yaml
-Copy code
+* User management with roles (`guest`, `host`, `admin`)
+* Conversations with multiple participants
+* Sending and retrieving messages within conversations
+* UUID primary keys for all models
+* Timestamp fields with automatic creation times
+* Nested serialization for conversations including messages
 
 ---
 
-## 🚀 Getting Started
+## Tech Stack
 
-### 🔧 Setup & Run
+* Python 3.11+
+* Django 4.x
+* Django REST Framework
+* SQLite (default, configurable to other databases)
+* `django-environ` for environment variables (optional)
+
+---
+
+## Setup and Installation
+
+### Prerequisites
+
+* Python 3.11+ installed
+* `venv` for virtual environments
+
+### Steps
 
 ```bash
-# Create and activate virtual environment
+# Clone the repo
+git clone https://github.com/yourusername/messaging_api.git
+cd messaging_app
+
+# Create virtual environment
 python -m venv venv
-venv\Scripts\activate      # On Windows
-# or
-source venv/bin/activate   # On macOS/Linux
+
+# Activate virtual environment
+# Windows (PowerShell)
+.\venv\Scripts\Activate.ps1
+# Linux/Mac
+source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 
 # Apply migrations
-python manage.py makemigrations
 python manage.py migrate
 
-# Run server
+# Create superuser (optional)
+python manage.py createsuperuser
+
+# Run development server
 python manage.py runserver
-🧩 API Overview
-Method	Endpoint	Description
-GET	/api/conversations/	List all conversations
-POST	/api/conversations/	Create a new conversation
-GET	/api/conversations/<id>/messages/	Get all messages in a conversation
-POST	/api/conversations/<id>/messages/	Send a message in a conversation
+```
 
-✅ Auth Login (Browsable API)
-/api-auth/login/
+---
 
-🧪 Sample Models
-CustomUser (Extends AbstractUser)
-python
-Copy code
-user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-phone_number = models.CharField(max_length=15)
-Conversation
-python
-Copy code
-conversation_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-participants = models.ManyToManyField(CustomUser, related_name="conversations")
-Message
-python
-Copy code
-message_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-conversation = models.ForeignKey(Conversation, related_name='messages', ...)
-message_body = models.TextField()
-sent_at = models.DateTimeField(auto_now_add=True)
-📦 Dependencies
-Django
+## Project Structure
 
-Django REST Framework
+```
+messaging_app/
+├── chats/
+│   ├── migrations/
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── serializers.py
+│   ├── tests.py
+│   ├── urls.py
+│   └── views.py
+├── messaging_app/
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── manage.py
+└── requirements.txt
+```
 
-drf-nested-routers
+---
 
-bash
-Copy code
-pip install django djangorestframework drf-nested-routers
-📁 Example Requests (Postman)
-Create a conversation
-json
-Copy code
-POST /api/conversations/
-{
-  "participants": ["<uuid1>", "<uuid2>"]
-}
-Send a message
-json
-Copy code
-POST /api/conversations/<conversation_id>/messages/
-{
-  "sender": "<user_uuid>",
-  "message_body": "Hi there!"
-}
-🧠 Learnings & Concepts
-Extending Django’s user model with UUIDs
+## Models
 
-Modeling one-to-many and many-to-many relationships
+### User
 
-Nesting APIs using NestedDefaultRouter
+* UUID primary key (`user_id`)
+* `first_name`, `last_name`, `email` (unique)
+* `phone_number` (optional)
+* `role` (`guest`, `host`, `admin`)
+* `created_at` timestamp
 
-DRF ViewSets and Serializers
+### Conversation
 
-Following RESTful conventions and Django best practices
+* UUID primary key (`conversation_id`)
+* `participants` (many-to-many relationship with `User`)
+* `created_at` timestamp
 
-🤝 Contributing
-This project was built as part of the ALX backend engineering track. Contributions, suggestions, and feedback are welcome!
+### Message
 
-📜 License
-This project is licensed under the MIT License.
+* UUID primary key (`message_id`)
+* `sender` (foreign key to `User`)
+* `conversation` (foreign key to `Conversation`)
+* `message_body` (text)
+* `sent_at` timestamp
 
-🙌 Acknowledgments
-Django Docs
+---
 
-DRF Docs
+## Serializers
 
-DRF Nested Routers
+* **UserSerializer:** Serializes user details, used nested inside other serializers.
+* **ConversationSerializer:** Serializes conversations including nested participant users and nested messages.
+* **ConversationCreateSerializer:** Used when creating or updating conversations; accepts participant IDs to establish many-to-many relationships.
+* **MessageSerializer:** Serializes messages including sender details.
+* **MessageCreateSerializer:** Used to create or update messages.
+
+---
+
+## Views (Viewsets)
+
+* **ConversationViewSet:** Handles CRUD operations on conversations. Uses different serializers for listing (`ConversationSerializer`) and creating/updating (`ConversationCreateSerializer`).
+* **MessageViewSet:** Handles CRUD operations on messages. Uses different serializers for listing (`MessageSerializer`) and creating/updating (`MessageCreateSerializer`).
+* Both viewsets use `AllowAny` permissions for simplicity but can be customized for authentication.
+
+---
+
+## API Endpoints
+
+| Method | Endpoint                   | Description                   |
+| ------ | -------------------------- | ----------------------------- |
+| GET    | `/api/conversations/`      | List all conversations        |
+| POST   | `/api/conversations/`      | Create a new conversation     |
+| GET    | `/api/conversations/{id}/` | Retrieve conversation details |
+| GET    | `/api/messages/`           | List all messages             |
+| POST   | `/api/messages/`           | Send a new message            |
+| GET    | `/api/messages/{id}/`      | Retrieve message details      |
+
+---
+
+## Testing
+
+Run the Django test suite:
+
+```bash
+python manage.py test
+```
+
+
+### Accessing the API via Browsable Interface (Session Auth)
+
+1. Open your browser and go to your API root, e.g.,
+   `http://127.0.0.1:8000/api/`
+
+2. You should see the **DRF browsable API interface** with a **Login** button on the top right.
+
+3. Click **Login** and enter your user credentials (created via `createsuperuser` or your app's users).
+
+4. Once logged in, you can interact with the API endpoints using the browser — GET, POST, etc. — with session-based authentication automatically applied.
+
+---
+
+### Accessing the API Programmatically (JWT Token Auth)
+
+1. Obtain a JWT token by sending a POST request to:
+   `http://127.0.0.1:8000/api/token/`
+   with JSON payload:
+
+   ```json
+   {
+     "email": "your_email@example.com",
+     "password": "your_password"
+   }
+   ```
+
+2. You will receive a response like:
+
+   ```json
+   {
+     "refresh": "your_refresh_token_here",
+     "access": "your_access_token_here"
+   }
+   ```
+
+3. Use the `access` token to authorize subsequent API requests by adding this HTTP header:
+
+   ```
+   Authorization: Bearer your_access_token_here
+   ```
+
+4. Example with `curl` to list conversations:
+
+   ```bash
+   curl -H "Authorization: Bearer your_access_token_here" http://127.0.0.1:8000/api/conversations/
+   ```
+
+---
+
+### Summary
+
+| Access Method          | How to Access                                                          | Authentication Used              |
+| ---------------------- | ---------------------------------------------------------------------- | -------------------------------- |
+| **Browser / UI**       | Visit `/api/` and login                                                | Session Authentication (cookies) |
+| **Programmatic (API)** | Use `/api/token/` to get JWT token and pass it in Authorization header | JWT Token Authentication         |
+
+---
+
+If you’re seeing errors, make sure:
+
+* You have users created with correct credentials.
+* Your URLs include both `api-auth/` and JWT token endpoints.
+* Your `REST_FRAMEWORK` settings include `SessionAuthentication` and `JWTAuthentication`.
+
+---
+
