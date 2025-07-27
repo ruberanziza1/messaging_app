@@ -1,38 +1,59 @@
 from rest_framework import serializers
-from .models import CustomUser, Message, Conversation
+from .models import User, Conversation, Message, ConversationParticipant
 
-# 1. User Serializer
 class UserSerializer(serializers.ModelSerializer):
-    phone_number = serializers.CharField(required=False)
-
     class Meta:
-        model = CustomUser
-        fields = ['user_id', 'username', 'email', 'first_name', 'last_name', 'phone_number']
+        model = User
+        fields = [
+            'user_id', 'first_name', 'last_name', 'email', 'phone_number', 'role', 'created_at'
+        ]
+        read_only_fields = ['user_id', 'created_at']
 
-# 2. Message Serializer
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True)
-    message_body = serializers.CharField()
+    # Example of SerializerMethodField for a formatted date string
+    sent_at_formatted = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
-        fields = ['message_id', 'conversation', 'sender', 'message_body', 'sent_at']
+        fields = ['message_id', 'sender', 'message_body', 'sent_at', 'sent_at_formatted', 'conversation']
+        read_only_fields = ['message_id', 'sent_at']
 
-# 3. Conversation Serializer with nested messages and participants
+    def get_sent_at_formatted(self, obj):
+        return obj.sent_at.strftime("%Y-%m-%d %H:%M:%S")
+
+class MessageCreateSerializer(serializers.ModelSerializer):
+    message_body = serializers.CharField(max_length=1000)  # Explicit CharField
+    class Meta:
+        model = Message
+        fields = ['message_body', 'conversation']
+
+    def validate_message_body(self, value):
+        if not value.strip():
+            raise serializers.ValidationError("Message body cannot be empty.")
+        return value
+
 class ConversationSerializer(serializers.ModelSerializer):
     participants = UserSerializer(many=True, read_only=True)
     messages = MessageSerializer(many=True, read_only=True)
-    participant_usernames = serializers.SerializerMethodField()
 
     class Meta:
         model = Conversation
-        fields = ['conversation_id', 'participants', 'participant_usernames', 'created_at', 'messages']
+        fields = ['conversation_id', 'participants', 'created_at', 'messages']
+        read_only_fields = ['conversation_id', 'created_at']
 
-    def get_participant_usernames(self, obj):
-        return [user.username for user in obj.participants.all()]
+class ConversationCreateSerializer(serializers.ModelSerializer):
+    participants = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=User.objects.all()
+    )
 
-    def validate(self, data):
-        # Dummy validation to use ValidationError
-        if not data.get('participants'):
-            raise serializers.ValidationError("At least one participant is required.")
-        return data
+    class Meta:
+        model = Conversation
+        fields = ['participants']
+
+    def create(self, validated_data):
+        participants = validated_data.pop('participants')
+        conversation = Conversation.objects.create()
+        for user in participants:
+            ConversationParticipant.objects.create(conversation=conversation, user=user)
+        return conversation
