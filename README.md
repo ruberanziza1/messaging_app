@@ -1,98 +1,141 @@
-# Messaging App API
-A Django-based messaging API allowing users to manage conversations and messages, with authentication via Django REST Framework.
+# 📬 Messaging API with Django & DRF
 
-## Features
-* User registration and management (based on Django’s User model)
+This project is a fully functional **messaging application** backend built using **Django** and **Django REST Framework (DRF)**. It demonstrates the complete lifecycle of building scalable, secure, and RESTful APIs including model design, serialization, viewsets, and nested routing using best practices.
 
-* Token-based and session authentication
+> ✅ Project for: **ALX Backend Specialization**  
+> ✅ Author: *Blessing Ebele Anochili*  
+> ✅ Directory: `messaging_app/`
 
-* Conversations and nested message handling
+---
 
-* RESTful API endpoints with Django REST Framework
+## 📌 Features
 
-* Secure and modular project structure
+- ✅ Custom user model with UUIDs and extended fields (phone number, etc.)
+- ✅ One-to-many and many-to-many relationships (e.g., conversations ↔ participants, messages ↔ conversations)
+- ✅ Nested routing for RESTful endpoints using `drf-nested-routers`
+- ✅ DRF viewsets for clean, reusable code
+- ✅ API browsable interface & testable via Postman
+- ✅ Modular project/app structure
 
-## Project Structure
-```bash
+---
+
+## 🧱 Project Structure
+
 messaging_app/
-├── chats/                   # Messaging app (conversations, messages)
-├── messaging_app/           # Django project settings
+│
+├── chats/ # Messaging logic
+│ ├── models.py # Models for User, Conversation, Message
+│ ├── serializers.py # Serializers with nested relationships
+│ ├── views.py # DRF ViewSets
+│ ├── urls.py # API routes using DRF Nested Routers
+│
+├── messaging_app/ # Django project core
+│ ├── settings.py
+│ ├── urls.py # Project-level routing
+│
+├── db.sqlite3 # SQLite database
 ├── manage.py
-└── requirements.txt
-```
+└── README.md
 
-## Installation
+yaml
+Copy code
 
-Clone the repository:
+---
+
+## 🚀 Getting Started
+
+### 🔧 Setup & Run
 
 ```bash
-git clone <repo_url>
-cd messaging_app
-```
+# Create and activate virtual environment
+python -m venv venv
+venv\Scripts\activate      # On Windows
+# or
+source venv/bin/activate   # On macOS/Linux
 
-Set up virtual environment:
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-Install dependencies:
-```bash
+# Install dependencies
 pip install -r requirements.txt
-```
-Required Packages Include:
 
-* Django
-
-* djangorestframework
-
-* djangorestframework-simplejwt (optional for JWT)
-
-* drf-nested-routers
-
-Configuration
-In messaging_app/settings.py, ensure:
-
-```python
-INSTALLED_APPS = [
-    ...
-    'rest_framework',
-    'rest_framework.authtoken',
-    'chats',
-]
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-}
-```
-
-## Authentication Setup
-Create a superuser:
-
-```bash
-python manage.py createsuperuser
-```
-
-
-## Running the Application
-```bash
+# Apply migrations
 python manage.py makemigrations
 python manage.py migrate
-python manage.py runserver
-```
-Access the browsable API at:
 
-```bash
-http://127.0.0.1:8000/api/
-📖 API Endpoints
+# Run server
+python manage.py runserver
+🧩 API Overview
 Method	Endpoint	Description
-GET	/api/conversations/	List conversations
+GET	/api/conversations/	List all conversations
 POST	/api/conversations/	Create a new conversation
-GET	/api/conversations/{id}/messages/	List messages in conversation
-POST	/api/conversations/{id}/messages/	Send message in conversation
-```
+GET	/api/conversations/<id>/messages/	Get all messages in a conversation
+POST	/api/conversations/<id>/messages/	Send a message in a conversation
+
+✅ Auth Login (Browsable API)
+/api-auth/login/
+
+🧪 Sample Models
+CustomUser (Extends AbstractUser)
+python
+Copy code
+user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+phone_number = models.CharField(max_length=15)
+Conversation
+python
+Copy code
+conversation_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+participants = models.ManyToManyField(CustomUser, related_name="conversations")
+Message
+python
+Copy code
+message_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+conversation = models.ForeignKey(Conversation, related_name='messages', ...)
+message_body = models.TextField()
+sent_at = models.DateTimeField(auto_now_add=True)
+📦 Dependencies
+Django
+
+Django REST Framework
+
+drf-nested-routers
+
+bash
+Copy code
+pip install django djangorestframework drf-nested-routers
+📁 Example Requests (Postman)
+Create a conversation
+json
+Copy code
+POST /api/conversations/
+{
+  "participants": ["<uuid1>", "<uuid2>"]
+}
+Send a message
+json
+Copy code
+POST /api/conversations/<conversation_id>/messages/
+{
+  "sender": "<user_uuid>",
+  "message_body": "Hi there!"
+}
+🧠 Learnings & Concepts
+Extending Django’s user model with UUIDs
+
+Modeling one-to-many and many-to-many relationships
+
+Nesting APIs using NestedDefaultRouter
+
+DRF ViewSets and Serializers
+
+Following RESTful conventions and Django best practices
+
+🤝 Contributing
+This project was built as part of the ALX backend engineering track. Contributions, suggestions, and feedback are welcome!
+
+📜 License
+This project is licensed under the MIT License.
+
+🙌 Acknowledgments
+Django Docs
+
+DRF Docs
+
+DRF Nested Routers
